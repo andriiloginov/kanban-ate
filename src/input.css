@@ -1,0 +1,23 @@
+@import "tailwindcss" source(none);
+@source "./index.src.html";
+
+/* Шрифти вбудовуються в index.html як data: URI під час збірки (scripts/build.mjs). */
+@font-face { font-family: "Mariupol"; font-weight: 400; font-display: swap; src: url("../fonts/Mariupol-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Mariupol"; font-weight: 500; font-display: swap; src: url("../fonts/Mariupol-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Mariupol"; font-weight: 600 700; font-display: swap; src: url("../fonts/Mariupol-Bold.woff2") format("woff2"); }
+
+/* Категорійна палітра для проєктів у статистиці (dataviz reference palette, перевірена на CVD). */
+:root {
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --series-5: #e87ba4; --series-6: #008300; --series-7: #4a3aa7; --series-other: #a3a3a3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-other: #737373;
+  }
+}
+
+@theme {
+  --font-sans: "Mariupol", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

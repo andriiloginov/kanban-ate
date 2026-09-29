@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<title>Design 2025 · Канбан</title>
+<!-- tailwind -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js" integrity="sha512-csIng5zcB+XpulRUa+ev1zKo7zRNGpEaVfNB9On1no9KYTEY/rLGAEEpvgdw6nim1WdTuihZY1eqZ31K7/fZjw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body class="bg-white font-sans text-neutral-950 antialiased dark:bg-neutral-950 dark:text-white">
+
+<div id="keyScreen" hidden class="grid min-h-dvh place-items-center p-4">
+  <form id="keyForm" class="w-full max-w-sm space-y-4">
+    <div>
+      <h1 class="text-base font-semibold">Design 2025</h1>
+      <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Канбан-дошка задач</p>
+    </div>
+    <label class="block space-y-1.5">
+      <span class="text-sm font-medium">Введіть ключ доступу</span>
+      <input id="keyInput" type="password" required autocomplete="off" class="block w-full rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-900 dark:focus:border-white">
+    </label>
+    <p id="keyError" class="text-sm text-neutral-600 empty:hidden dark:text-neutral-300"></p>
+    <button class="w-full rounded-md bg-neutral-950 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200">Увійти</button>
+  </form>
+</div>
+
+<div id="app" hidden class="flex min-h-dvh flex-col">
+  <header class="sticky top-0 z-10 border-b border-neutral-950/10 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-neutral-950/90">
+    <div class="flex flex-wrap items-center gap-2 px-4 py-3">
+      <h1 class="flex items-center gap-2.5 text-sm font-semibold">
+        <svg viewBox="0 0 46 59" fill="currentColor" class="h-7 w-auto" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.01406 46.192C5.12068 45.8944 5.06221 45.607 4.86428 45.4567C4.66624 45.3064 4.36516 45.3206 4.09362 45.4931C3.10176 46.1232 1.83467 46.9281 0.973107 47.4754C0.74772 47.6185 0.49877 47.6544 0.305411 47.5716C0.111952 47.4887 -0.00186666 47.2975 2.31692e-05 47.0587C0.0256851 43.8741 0.102234 34.3263 0.121829 31.894C0.124514 31.5591 0.352699 31.2024 0.676655 31.0263C3.26453 29.6198 14.2086 23.6719 16.8088 22.2587C17.1355 22.0811 17.3643 21.7203 17.3636 21.3835C17.3613 20.282 17.3564 17.8808 17.3541 16.7791C17.3534 16.4422 17.5823 16.0813 17.9091 15.9038C19.8012 14.8761 25.9862 11.5169 28.0594 10.391C28.4416 10.1834 28.8316 10.2925 28.9429 10.6382C29.3547 11.9163 30.2858 14.8071 30.5887 15.7473C30.6503 15.9386 30.6159 16.1743 30.4945 16.3908C30.142 17.0199 29.3666 18.4034 28.7139 19.5684C28.5445 19.8706 28.5486 20.2004 28.7242 20.3978C28.8998 20.5951 29.2105 20.619 29.5053 20.4579C31.6934 19.2626 35.2227 17.3346 36.7546 16.4977C36.9496 16.3911 37.1157 16.215 37.214 16.0106C37.3123 15.8062 37.334 15.5915 37.2742 15.4167C36.7945 14.0139 35.7011 10.817 35.3454 9.77677C35.2738 9.56762 35.0941 9.43972 34.8644 9.43443C33.1991 9.39643 26.3269 9.23948 23.8842 9.18373C23.3685 9.17192 23.0176 8.79611 23.0176 8.2555C23.0176 8.25451 23.0176 8.25342 23.0176 8.25243C23.0176 7.54262 23.5877 6.79841 24.2974 6.58184C28.4293 5.32076 41.2448 1.40929 42.9536 0.887754C43.0776 0.849863 43.1999 0.843958 43.3093 0.870389C43.7538 0.977965 44.9764 1.27382 45.6114 1.4276C45.8538 1.48624 46.0036 1.69639 45.9999 1.97212C45.9709 4.14847 45.8448 13.5914 45.8136 15.9233C45.8095 16.2362 45.6091 16.5696 45.3138 16.7551C43.1016 18.1444 34.0376 23.8369 30.3397 26.1593C30.0638 26.3327 29.8688 26.6366 29.8427 26.9342C29.8167 27.2319 29.9644 27.4669 30.2194 27.5332C32.9014 28.2312 38.4843 29.6844 40.1232 30.1109C40.3991 30.1828 40.547 30.451 40.4909 30.7774C40.1377 32.8334 38.8922 40.0839 38.5721 41.9472C38.5255 42.2191 38.6202 42.4548 38.8204 42.566C39.5671 42.9805 41.4501 44.0258 42.8091 44.7801C43.0442 44.9106 43.1302 45.2102 43.0242 45.5305C42.9181 45.8507 42.6428 46.1232 42.3347 46.213C38.8094 47.2402 31.6608 49.3232 29.435 49.9718C29.0524 50.0833 28.734 49.8823 28.7032 49.51C28.4675 46.6681 27.5276 35.3295 27.0185 29.189C26.9897 28.8428 26.7111 28.641 26.357 28.7101C26.003 28.7792 25.6754 29.0992 25.5796 29.4697C23.7931 36.376 20.3982 49.4991 19.6453 52.4097C19.5565 52.7532 19.2666 53.0571 18.9368 53.1526C16.6557 53.8131 7.99716 56.3202 4.53091 57.324C4.2543 57.4041 4.00145 57.3218 3.87682 57.1113C3.75209 56.9007 3.77682 56.5975 3.94054 56.327C4.73128 55.0204 5.88985 53.106 6.61773 51.9033C6.76583 51.6586 6.80098 51.3854 6.71137 51.1781C6.62175 50.9708 6.41958 50.8579 6.1748 50.8786C5.52072 50.9338 4.70813 51.0023 4.10508 51.0532C3.89232 51.0712 3.70983 50.9883 3.60698 50.8269C3.50413 50.6655 3.49154 50.442 3.57221 50.2167C3.94321 49.1813 4.55692 47.4679 5.01406 46.192ZM5.4292 44.2061C5.47237 44.2838 5.55484 44.325 5.65261 44.3176C5.75048 44.3104 5.85256 44.2553 5.92925 44.1687C7.63009 42.2463 15.6141 33.2226 17.7049 30.8595C17.7993 30.7528 17.8406 30.6149 17.8114 30.5037C17.7823 30.3925 17.6876 30.3273 17.5674 30.3355C15.7251 30.461 10.4662 30.8193 9.32193 30.8974C9.18894 30.9064 9.05177 31.0031 8.97846 31.1394C8.17369 32.6359 3.66079 41.0278 3.66079 41.0278C3.66079 41.0278 4.9464 43.3384 5.4292 44.2061Z"/></svg>
+        Design 2025
+      </h1>
+      <nav class="mr-auto ml-2 flex rounded-md bg-neutral-100 p-0.5 text-sm font-medium dark:bg-white/10" aria-label="Вид">
+        <button type="button" data-view="board" class="rounded px-2.5 py-1 text-neutral-500 aria-pressed:bg-white aria-pressed:text-neutral-950 aria-pressed:shadow-xs dark:text-neutral-400 dark:aria-pressed:bg-neutral-800 dark:aria-pressed:text-white">Дошка</button>
+        <button type="button" data-view="stats" class="rounded px-2.5 py-1 text-neutral-500 aria-pressed:bg-white aria-pressed:text-neutral-950 aria-pressed:shadow-xs dark:text-neutral-400 dark:aria-pressed:bg-neutral-800 dark:aria-pressed:text-white">Статистика</button>
+      </nav>
+      <div id="boardControls" class="flex flex-wrap items-center gap-2">
+      <select id="tabSelect" aria-label="Місяць" class="h-8 rounded-md border border-neutral-950/15 bg-white px-2 text-sm dark:border-white/15 dark:bg-neutral-900"></select>
+      <select id="projectFilter" aria-label="Проєкт" class="h-8 max-w-40 rounded-md border border-neutral-950/15 bg-white px-2 text-sm dark:border-white/15 dark:bg-neutral-900"></select>
+      <span id="total" class="px-1 text-sm tabular-nums text-neutral-500 dark:text-neutral-400"></span>
+      </div>
+      <button id="refreshBtn" type="button" class="h-8 rounded-md border border-neutral-950/15 px-3 text-sm font-medium hover:bg-neutral-50 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/5" aria-label="Оновити"><span class="sm:hidden" aria-hidden="true">↻</span><span class="max-sm:hidden">Оновити</span></button>
+    </div>
+  </header>
+  <main id="stats" hidden class="mx-auto w-full max-w-5xl space-y-10 p-4 pb-16"></main>
+  <main id="board" class="flex flex-1 snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto p-4 md:snap-none"></main>
+</div>
+
+<dialog id="editDialog" class="m-auto w-[min(32rem,calc(100%-2rem))] rounded-lg border border-neutral-950/10 bg-white p-0 text-neutral-950 shadow-xl backdrop:bg-neutral-950/40 dark:border-white/10 dark:bg-neutral-900 dark:text-white">
+  <form id="editForm" method="dialog" class="space-y-4 p-5">
+    <h2 class="text-base font-semibold">Задача</h2>
+    <label class="block space-y-1.5"><span class="text-sm font-medium">Назва</span>
+      <textarea name="title" rows="2" required class="block w-full resize-y rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white"></textarea></label>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <label class="block space-y-1.5"><span class="text-sm font-medium">Години</span>
+        <input name="hours" inputmode="decimal" placeholder="напр. 4,5" class="block w-full rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white"></label>
+      <label class="block space-y-1.5"><span class="text-sm font-medium">Проєкт</span>
+        <input name="project" list="projectList" class="block w-full rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white"></label>
+      <label class="col-span-2 block space-y-1.5 sm:col-span-1"><span class="text-sm font-medium">Відповідальний</span>
+        <input name="assignee" list="assigneeList" class="block w-full rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white"></label>
+      <div role="group" aria-labelledby="deadlineLabel" class="col-span-2 space-y-1.5 sm:col-span-3">
+        <span id="deadlineLabel" class="block text-sm font-medium">Дедлайн <span class="font-normal text-neutral-500 dark:text-neutral-400">· час необов’язковий</span></span>
+        <div class="flex gap-2">
+          <input name="deadline" type="date" aria-label="Дата дедлайну" class="block min-w-0 flex-1 rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white">
+          <input name="deadlineTime" type="time" aria-label="Час дедлайну" class="block w-32 rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 disabled:opacity-50 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white">
+        </div>
+      </div>
+    </div>
+    <label class="block space-y-1.5"><span class="text-sm font-medium">Коментар</span>
+      <textarea name="comment" rows="3" class="block w-full resize-y rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-950 dark:focus:border-white"></textarea></label>
+    <p id="editError" class="text-sm text-neutral-600 empty:hidden dark:text-neutral-300"></p>
+    <div class="flex justify-end gap-2">
+      <button value="cancel" formnovalidate class="rounded-md border border-neutral-950/15 px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-white/15 dark:hover:bg-white/5">Скасувати</button>
+      <button value="save" class="rounded-md bg-neutral-950 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200">Зберегти</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="projectList"></datalist>
+<datalist id="assigneeList"></datalist>
+
+<div id="tip" hidden class="pointer-events-none fixed z-30 max-w-64 rounded-md bg-neutral-950 px-2.5 py-1.5 text-xs text-white shadow-lg dark:bg-white dark:text-neutral-950"></div>
+<div id="toast" role="status" aria-live="polite" class="pointer-events-none fixed inset-x-4 bottom-4 z-20 mx-auto max-w-md rounded-md bg-neutral-950 px-4 py-3 text-sm text-white shadow-lg transition-opacity empty:opacity-0 dark:bg-white dark:text-neutral-950"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzN-EDVGxBajbBm9E5rA45O5vT5zSUCjEe3fThgXyfPTaq1BciEByOryze4adfoIUC-/exec";
+const REFRESH_MS = 60000;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const norm = (s) => String(s ?? '').trim().toLowerCase();
+const fmtHours = (n) => (+n || 0).toLocaleString('uk-UA', { maximumFractionDigits: 2 });
+const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : '');
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+};
+
+const MESSAGES = {
+  network: 'Немає зв’язку з API. Перевірте інтернет, API_URL і що доступ до вебдодатку: «Усі» (Anyone).',
+  html: 'API повернув сторінку замість даних (ймовірно, вхід у Google). Перевірте, що доступ до вебдодатку: «Усі» (Anyone) і що API_URL закінчується на /exec.',
+  bad_response: 'API повернув незрозумілу відповідь.',
+  unauthorized: 'Невірний ключ доступу.',
+  conflict: 'Рядок у таблиці змінився. Дошку оновлено — повторіть дію.',
+  tab_not_found: 'Вкладку не знайдено. Можливо, її перейменували — натисніть «Оновити».',
+  title_required: 'Назва задачі обов’язкова.',
+  bad_hours: 'Години мають бути числом, напр. 4,5.',
+  bad_date: 'Неправильна дата.',
+  no_api_url: 'Не вказано API_URL у src/index.src.html.',
+};
+class ApiError extends Error {
+  constructor(code, detail) { super(MESSAGES[code] || `Помилка: ${code}${detail ? ` (${detail})` : ''}`); this.code = code; }
+}
+
+let key = '';
+const state = { tabs: [], tab: '', data: null, project: '', pending: 0, dragging: false, lastDrag: 0, loadSeq: 0 };
+
+async function api(query, body) {
+  if (API_URL.includes('PASTE_')) throw new ApiError('no_api_url');
+  let text;
+  try {
+    const res = body
+      ? await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, key }) })
+      : await fetch(`${API_URL}?${new URLSearchParams({ ...query, key })}`);
+    text = await res.text();
+  } catch {
+    throw new ApiError('network');
+  }
+  let data;
+  try { data = JSON.parse(text); } catch { throw new ApiError(text.trimStart().startsWith('<') ? 'html' : 'bad_response'); }
+  if (data.error) {
+    if (data.error === 'unauthorized') logout(MESSAGES.unauthorized);
+    throw new ApiError(data.error, data.message);
+  }
+  return data;
+}
+
+let toastTimer;
+function toast(msg) {
+  $('#toast').textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $('#toast').textContent = ''; }, 6000);
+}
+
+// ---------- ключ ----------
+function logout(msg) {
+  key = '';
+  store.set('kanbanKey', null);
+  $('#app').hidden = true;
+  $('#keyScreen').hidden = false;
+  $('#keyError').textContent = msg || '';
+  $('#keyInput').focus();
+}
+
+$('#keyForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  key = $('#keyInput').value.trim();
+  store.set('kanbanKey', key);
+  start();
+});
+
+// ---------- завантаження ----------
+function boardMessage(msg) {
+  $('#board').innerHTML = `<p class="w-full py-16 text-center text-sm text-neutral-500 dark:text-neutral-400">${esc(msg)}</p>`;
+}
+
+async function start() {
+  $('#keyScreen').hidden = true;
+  $('#app').hidden = false;
+  state.stats = null;
+  setView(state.view || store.get('kanbanView'));
+  boardMessage('Завантаження…');
+  try {
+    state.tabs = (await api({ action: 'tabs' })).tabs;
+    $('#tabSelect').innerHTML = state.tabs.map((t) => `<option>${esc(t.name)}</option>`).join('');
+    if (!state.tabs.some((t) => t.name === state.tab)) state.tab = state.tabs[0]?.name || '';
+    $('#tabSelect').value = state.tab;
+    if (!state.tab) return boardMessage('Не знайдено жодної вкладки з колонкою «Задача».');
+    await loadList();
+  } catch (e) {
+    if (e.code !== 'unauthorized') boardMessage(e.message);
+  }
+}
+
+async function loadList({ silent = false } = {}) {
+  const seq = ++state.loadSeq, tab = state.tab;
+  const btn = $('#refreshBtn');
+  btn.disabled = true;
+  if (!silent) { state.data = null; boardMessage('Завантаження…'); }
+  try {
+    const data = await api({ action: 'list', tab });
+    if (seq !== state.loadSeq) return;
+    state.data = data;
+    render();
+  } catch (e) {
+    if (seq !== state.loadSeq || e.code === 'unauthorized') return;
+    if (silent && state.data) toast(e.message); else boardMessage(e.message);
+  } finally {
+    if (seq === state.loadSeq) btn.disabled = false;
+  }
+}
+
+$('#tabSelect').addEventListener('change', (e) => { state.tab = e.target.value; state.project = ''; loadList(); });
+$('#projectFilter').addEventListener('change', (e) => { state.project = e.target.value; render(); });
+$('#refreshBtn').addEventListener('click', () => (state.view === 'stats' ? loadStats() : start()));
+
+setInterval(() => {
+  if (document.visibilityState === 'visible' && key && state.view === 'board' && state.data && !state.pending && !state.dragging &&
+      !$('#editDialog').open && !document.querySelector('[data-add-form]')) loadList({ silent: true });
+}, REFRESH_MS);
+
+// ---------- рендер ----------
+const DOT = {
+  'not started': 'border border-neutral-400 dark:border-neutral-500',
+  'in progress': 'bg-neutral-400 dark:bg-neutral-500',
+  done: 'bg-neutral-950 dark:bg-white',
+};
+const ICON_BRIEF = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4" aria-hidden="true"><path d="M4 1.75h5.5L12.25 4.5v9.75H4z"/><path d="M6 7h4M6 9.5h4M6 12h2.5"/></svg>';
+const ICON_FILE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4" aria-hidden="true"><path d="M10.5 4.5 5.9 9.1a1.5 1.5 0 0 0 2.1 2.1l5-5a3 3 0 0 0-4.2-4.2l-5 5a4.5 4.5 0 0 0 6.4 6.4l4.3-4.3"/></svg>';
+
+function columnsOf(data) {
+  const cols = data.statuses.slice();
+  for (const it of data.items) {
+    if (!cols.some((s) => norm(s) === norm(it.status))) cols.push(it.status.trim());
+  }
+  return cols;
+}
+const columnFor = (cols, status) => cols.find((s) => norm(s) === norm(status)) ?? status;
+
+function render() {
+  const data = state.data;
+  if (!data) return;
+  const projects = [...new Set(data.items.map((i) => i.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'uk'));
+  if (state.project && !projects.includes(state.project)) state.project = '';
+  $('#projectFilter').innerHTML = `<option value="">Усі проєкти</option>` + projects.map((p) => `<option>${esc(p)}</option>`).join('');
+  $('#projectFilter').value = state.project;
+  $('#projectList').innerHTML = projects.map((p) => `<option value="${esc(p)}">`).join('');
+  $('#assigneeList').innerHTML = [...new Set(data.items.map((i) => i.assignee).filter(Boolean))].map((p) => `<option value="${esc(p)}">`).join('');
+
+  const visible = data.items.filter((i) => !state.project || i.project === state.project);
+  $('#total').textContent = `Σ ${fmtHours(visible.reduce((s, i) => s + (i.hours || 0), 0))} год`;
+  const cols = columnsOf(data);
+  $('#board').innerHTML = cols.map((status) => columnHtml(status, cols, visible.filter((i) => columnFor(cols, i.status) === status))).join('');
+
+  if (!window.Sortable) return toast('Не вдалося завантажити SortableJS — змінюйте статус через список у картці.');
+  document.querySelectorAll('[data-list]').forEach((el) => Sortable.create(el, {
+    group: 'board', sort: false, animation: 150, forceFallback: true, fallbackTolerance: 4,
+    delay: 250, delayOnTouchOnly: true, filter: 'select, a, [data-temp]', preventOnFilter: false,
+    ghostClass: 'opacity-40',
+    onStart: () => { state.dragging = true; },
+    onEnd: (e) => {
+      state.dragging = false;
+      state.lastDrag = Date.now();
+      if (e.from === e.to) return;
+      const item = findItem(e.item.dataset.row);
+      if (item) save(item, { status: e.to.dataset.list });
+    },
+  }));
+}
+
+function columnHtml(status, cols, items) {
+  const hours = items.reduce((s, i) => s + (i.hours || 0), 0);
+  const dot = DOT[norm(status)] || 'border border-dashed border-neutral-400 dark:border-neutral-500';
+  return `<section class="flex w-[85%] shrink-0 snap-start flex-col rounded-lg bg-neutral-50 md:w-auto md:min-w-64 md:flex-1 md:shrink dark:bg-white/5">
+    <div class="flex items-center gap-2 px-3 pt-3 pb-2">
+      <span class="size-2 shrink-0 rounded-full ${dot}"></span>
+      <h2 class="truncate text-sm font-medium">${esc(status || 'Без статусу')}</h2>
+      <span class="text-sm tabular-nums text-neutral-500 dark:text-neutral-400">${items.length}</span>
+      <span class="ml-auto text-xs tabular-nums text-neutral-500 dark:text-neutral-400">${fmtHours(hours)} год</span>
+    </div>
+    <div data-list="${esc(status)}" class="flex min-h-20 flex-col gap-2 px-2 pb-2">
+      ${items.map((i) => cardHtml(i, cols)).join('') || '<p data-temp class="py-6 text-center text-xs text-neutral-400 dark:text-neutral-500">Порожньо</p>'}
+    </div>
+    <div class="px-2 pb-2">
+      <button type="button" data-add="${esc(status)}" class="w-full rounded-md px-2 py-1.5 text-left text-sm text-neutral-500 hover:bg-neutral-950/5 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-white">+ Задача</button>
+    </div>
+  </section>`;
+}
+
+function cardHtml(i, cols) {
+  const meta = [
+    i.project && `<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-medium text-neutral-700 dark:bg-white/10 dark:text-neutral-300">${esc(i.project)}</span>`,
+    i.hours != null && `<span class="tabular-nums">${fmtHours(i.hours)} год</span>`,
+    i.assignee && `<span>${esc(i.assignee)}</span>`,
+    i.doneDate ? `<span title="Дата виконання">✓ ${esc(i.doneDate)}</span>` : i.deadline && `<span title="Дедлайн">до ${esc(i.deadline)}</span>`,
+  ].filter(Boolean).join('');
+  const links = [[i.briefLink, 'ТЗ', ICON_BRIEF], [i.fileLink, 'Файл', ICON_FILE]]
+    .filter(([u]) => safeUrl(u))
+    .map(([u, label, icon]) => `<a href="${esc(u)}" target="_blank" rel="noopener" title="${label}" aria-label="${label}" class="rounded p-1 text-neutral-500 hover:bg-neutral-950/5 hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white">${icon}</a>`).join('');
+  const current = columnFor(cols, i.status);
+  const options = cols.map((s) => `<option value="${esc(s)}"${s === current ? ' selected' : ''}>${esc(s || 'Без статусу')}</option>`).join('');
+  return `<article ${i.row ? `data-row="${i.row}" tabindex="0"` : 'data-temp'} class="cursor-pointer rounded-md border border-neutral-950/10 bg-white p-3 shadow-xs outline-none hover:border-neutral-950/25 focus-visible:border-neutral-950 dark:border-white/10 dark:bg-neutral-900 dark:hover:border-white/25 dark:focus-visible:border-white ${i.row ? '' : 'opacity-60'}">
+    <p class="text-sm leading-snug font-medium break-words">${esc(i.title)}</p>
+    ${meta ? `<div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">${meta}</div>` : ''}
+    <div class="mt-2 flex items-center justify-between gap-2">
+      <select data-status-select aria-label="Статус" ${i.row ? '' : 'disabled'} class="h-7 min-w-0 rounded border border-transparent bg-transparent px-1 text-xs text-neutral-500 hover:border-neutral-950/15 dark:text-neutral-400 dark:hover:border-white/15">${options}</select>
+      ${links ? `<span class="flex shrink-0 gap-0.5">${links}</span>` : ''}
+    </div>
+  </article>`;
+}
+
+const findItem = (row) => state.data?.items.find((i) => String(i.row) === String(row));
+
+// ---------- зміни ----------
+async function save(item, patch) {
+  const tab = state.tab, before = { ...item };
+  Object.assign(item, patch);
+  render();
+  state.pending++;
+  try {
+    const res = await api(null, { action: 'update', tab, row: item.row, expectedTitle: before.title, patch });
+    Object.assign(item, res.item);
+    state.stats = null; // статистика перерахується при наступному відкритті
+  } catch (e) {
+    Object.assign(item, before);
+    toast(e.message);
+    if (e.code === 'conflict') await loadList({ silent: true });
+  } finally {
+    state.pending--;
+    if (tab === state.tab) render();
+  }
+}
+
+async function create(status, title) {
+  const tab = state.tab;
+  const temp = { row: 0, title, status, project: state.project, hours: null, assignee: '', deadline: '', doneDate: '' };
+  state.data.items.push(temp);
+  render();
+  state.pending++;
+  try {
+    const res = await api(null, { action: 'create', tab, item: { title, status, project: state.project || undefined } });
+    Object.assign(temp, res.item);
+    state.stats = null;
+  } catch (e) {
+    state.data.items.splice(state.data.items.indexOf(temp), 1);
+    toast(e.message);
+  } finally {
+    state.pending--;
+    if (tab === state.tab) render();
+  }
+}
+
+$('#board').addEventListener('change', (e) => {
+  if (!e.target.matches('[data-status-select]')) return;
+  const item = findItem(e.target.closest('[data-row]').dataset.row);
+  if (item) save(item, { status: e.target.value });
+});
+
+$('#board').addEventListener('click', (e) => {
+  const add = e.target.closest('[data-add]');
+  if (add) return openAddForm(add);
+  if (e.target.closest('select, a') || Date.now() - state.lastDrag < 300) return;
+  const card = e.target.closest('[data-row]');
+  if (card) openEdit(findItem(card.dataset.row));
+});
+
+$('#board').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.matches('[data-row]')) openEdit(findItem(e.target.dataset.row));
+});
+
+function openAddForm(btn) {
+  const status = btn.dataset.add;
+  const form = document.createElement('form');
+  form.dataset.addForm = '';
+  form.innerHTML = `<input name="title" required placeholder="Назва задачі" aria-label="Назва нової задачі" class="block w-full rounded-md border border-neutral-950/15 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-950 dark:border-white/15 dark:bg-neutral-900 dark:focus:border-white">
+    <p class="mt-1 px-1 text-xs text-neutral-400 dark:text-neutral-500">Enter — додати, Esc — скасувати</p>`;
+  btn.replaceWith(form);
+  const input = form.elements.title;
+  input.focus();
+  const close = () => { if (form.isConnected) form.replaceWith(btn); };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  input.addEventListener('blur', () => { if (!input.value.trim()) close(); });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = input.value.trim();
+    if (!title) return;
+    form.remove();
+    create(status, title);
+  });
+}
+
+// ---------- редагування ----------
+const dialog = $('#editDialog'), editForm = $('#editForm');
+let editing = null;
+
+function openEdit(item) {
+  if (!item) return;
+  editing = item;
+  const f = editForm.elements;
+  f.title.value = item.title;
+  f.hours.value = item.hours == null ? '' : fmtHours(item.hours);
+  f.project.value = item.project;
+  f.assignee.value = item.assignee;
+  f.comment.value = item.comment;
+  [f.deadline.value, f.deadlineTime.value = ''] = (item.deadlineIso || '').split('T');
+  f.deadlineTime.disabled = !f.deadline.value;
+  const cols = state.data.columns;
+  for (const name of ['hours', 'project', 'assignee', 'comment', 'deadline']) f[name].closest('label, [role=group]').hidden = !cols.includes(name);
+  $('#editError').textContent = '';
+  dialog.showModal();
+}
+
+editForm.addEventListener('submit', (e) => {
+  if (e.submitter?.value !== 'save' || !editing) return;
+  const f = editForm.elements, patch = {};
+  const hoursText = f.hours.value.trim().replace(/\s/g, '').replace(',', '.');
+  const hours = hoursText === '' ? null : Number(hoursText);
+  if (Number.isNaN(hours)) { e.preventDefault(); $('#editError').textContent = MESSAGES.bad_hours; return; }
+  const next = { title: f.title.value.trim(), hours, project: f.project.value.trim(), assignee: f.assignee.value.trim(), comment: f.comment.value.trim(),
+    deadline: f.deadline.value && f.deadlineTime.value ? `${f.deadline.value}T${f.deadlineTime.value}` : f.deadline.value };
+  if (!next.title) { e.preventDefault(); $('#editError').textContent = MESSAGES.title_required; return; }
+  const cur = { ...editing, deadline: editing.deadlineIso || '' };
+  for (const k of Object.keys(next)) {
+    if (k !== 'title' && !state.data.columns.includes(k)) continue;
+    if ((next[k] ?? '') !== (cur[k] ?? '')) patch[k] = next[k];
+  }
+  if (Object.keys(patch).length) save(editing, patch);
+});
+dialog.addEventListener('close', () => { editing = null; });
+editForm.elements.deadline.addEventListener('input', (e) => {
+  editForm.elements.deadlineTime.disabled = !e.target.value;
+  if (!e.target.value) editForm.elements.deadlineTime.value = '';
+});
+
+// ---------- вид: дошка / статистика ----------
+function setView(view) {
+  state.view = view === 'stats' ? 'stats' : 'board';
+  store.set('kanbanView', state.view);
+  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === state.view));
+  $('#board').hidden = $('#boardControls').hidden = state.view !== 'board';
+  $('#stats').hidden = state.view !== 'stats';
+  if (state.view === 'stats' && !state.stats) loadStats();
+}
+document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+
+// ---------- статистика ----------
+const NORM = 160; // норма годин на місяць — понад неї рахується овертайм
+const OVERTIME_ROW = /^overtime/i; // рядок-оцінка овертайму — не робота, не рахуємо
+const CARRYOVER_ROW = /^години за/i; // перенесені години: входять у суму місяця, але не в проєкти/типи/задачі
+const CATEGORIES = [ // перша збіжна категорія виграє; решта — «Інше»
+  ['Презентації', /презен|проезентац|pitch|deck|дека|слайд|пропозал|proposal|outlook/i],
+  ['Айдентика, стиль, дизайн-системи', /айдентик|ідентик|ідентичн|стил|логотип|логобук|бренд|систем|гайдлайн|шаблон|візит|мерч|пакуванн|подарунк/i],
+  ['Сайти й посадкові', /сайт|лендінг|landing|посадков|портал/i],
+  ['Публікації й соцмережі', /публіка|пост|допис|соцмереж|соціальн|інстаграм|instagram|linkedin|сторіс|карусел|банер|reels/i],
+  ['Документи, звіти, one-pager’и', /звіт|report|документ|one.?pager|резюме|брошур|бланк|сертифікат|лист|framework|схем|а3|a3|дашборд|органігр|інвойс|каталог|catalog|огляд|аналіз/i],
+];
+const SERIES = 7; // перші 7 проєктів — власний колір, решта — «Інше»
+const EN_MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const UA_MONTHS = ['Січ', 'Лют', 'Бер', 'Кві', 'Тра', 'Чер', 'Лип', 'Сер', 'Вер', 'Жов', 'Лис', 'Гру'];
+const sumHours = (items) => items.reduce((s, i) => s + (i.hours || 0), 0);
+const pct = (a, b) => `${b ? Math.round((a / b) * 100) : 0}%`;
+
+function monthLabel(tab) {
+  const m = tab.trim().match(/^([a-z]+)\s+(\d{2}|\d{4})$/i);
+  const i = m ? EN_MONTHS.indexOf(m[1].slice(0, 3).toLowerCase()) : -1;
+  return i < 0 ? tab : `${UA_MONTHS[i]} ${m[2].slice(-2)}`;
+}
+
+async function loadStats() {
+  const btn = $('#refreshBtn');
+  btn.disabled = true;
+  $('#stats').innerHTML = `<p class="py-16 text-center text-sm text-neutral-500 dark:text-neutral-400">Завантаження всіх місяців…</p>`;
+  try {
+    state.stats = (await api({ action: 'all' })).tabs;
+    renderStats();
+  } catch (e) {
+    if (e.code !== 'unauthorized') $('#stats').innerHTML = `<p class="py-16 text-center text-sm text-neutral-500 dark:text-neutral-400">${esc(e.message)}</p>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function computeStats(tabs) {
+  // Вкладки йдуть від новішої до старішої — для графіків розвертаємо.
+  const months = tabs.slice().reverse().map((t) => {
+    const items = t.items.filter((i) => !OVERTIME_ROW.test(i.title));
+    return { label: monthLabel(t.tab), hours: sumHours(items), work: items.filter((i) => !CARRYOVER_ROW.test(i.title)) };
+  });
+  const byProject = new Map();
+  months.forEach((m, mi) => m.work.forEach((i) => {
+    const k = norm(i.project);
+    if (!byProject.has(k)) byProject.set(k, { name: i.project.trim() || 'Без проєкту', total: 0, months: months.map(() => 0) });
+    const p = byProject.get(k);
+    p.total += i.hours || 0;
+    p.months[mi] += i.hours || 0;
+  }));
+  let projects = [...byProject.values()].filter((p) => p.total > 0).sort((a, b) => b.total - a.total);
+  if (projects.length > SERIES) {
+    const rest = projects.slice(SERIES);
+    projects = projects.slice(0, SERIES).concat({ name: 'Інше', other: true, total: sumHours(rest.map((p) => ({ hours: p.total }))), months: months.map((_, mi) => rest.reduce((s, p) => s + p.months[mi], 0)) });
+  }
+  projects.forEach((p, i) => { p.color = p.other ? 'var(--series-other)' : `var(--series-${i + 1})`; });
+
+  const work = months.flatMap((m) => m.work.map((i) => ({ ...i, month: m.label })));
+  const cats = CATEGORIES.map(([name]) => ({ name, total: 0 })).concat({ name: 'Інше', total: 0 });
+  work.forEach((i) => {
+    const k = CATEGORIES.findIndex(([, re]) => re.test(i.title));
+    cats[k < 0 ? cats.length - 1 : k].total += i.hours || 0;
+  });
+
+  const hours = months.map((m) => m.hours), sorted = hours.slice().sort((a, b) => a - b), n = hours.length;
+  return {
+    months, projects, work,
+    cats: cats.filter((c) => c.total > 0).sort((a, b) => (a.name === 'Інше') - (b.name === 'Інше') || b.total - a.total),
+    top: work.slice().sort((a, b) => (b.hours || 0) - (a.hours || 0)).slice(0, 10),
+    total: sumHours(months),
+    avg: n ? sumHours(months) / n : 0,
+    median: n ? (n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2) : 0,
+    last6: sumHours(months.slice(-6)) / Math.min(6, n || 1),
+    done: work.filter((i) => norm(i.status) === 'done').length,
+    projectCount: [...byProject.keys()].filter(Boolean).length,
+    over: months.filter((m) => m.hours > NORM),
+  };
+}
+
+function renderStats() {
+  const s = computeStats(state.stats);
+  if (!s.months.length) return void ($('#stats').innerHTML = '<p class="py-16 text-center text-sm text-neutral-500">Немає даних.</p>');
+  const card = 'rounded-lg border border-neutral-950/10 p-4 dark:border-white/10';
+  const muted = 'text-neutral-500 dark:text-neutral-400';
+  const section = (title, sub, body) => `<section><h2 class="text-base font-semibold">${title}</h2>${sub ? `<p class="mt-0.5 text-sm ${muted}">${sub}</p>` : ''}<div class="mt-4">${body}</div></section>`;
+  const tile = (label, value, note = '') => `<div class="${card}"><p class="text-xs ${muted}">${label}</p><p class="mt-1 text-2xl font-semibold tabular-nums">${value}</p>${note ? `<p class="mt-0.5 text-xs ${muted}">${note}</p>` : ''}</div>`;
+  const h = (n) => `${fmtHours(n)} год`;
+
+  // Години по місяцях: стовпчики + лінії середнього і норми
+  const max1 = Math.max(NORM, ...s.months.map((m) => m.hours)) * 1.08;
+  const y1 = (v) => `${((v / max1) * 100).toFixed(2)}%`;
+  const refLine = (v, label, style) => `<div class="pointer-events-none absolute inset-x-0 border-t ${style}" style="bottom:${y1(v)}"><span class="absolute right-0 -translate-y-full bg-white/80 px-1 text-[11px] ${muted} dark:bg-neutral-950/80">${label}</span></div>`;
+  const labels = `<div class="flex gap-1.5 pt-1.5">${s.months.map((m) => `<span class="flex-1 text-center text-[11px] ${muted}">${esc(m.label)}</span>`).join('')}</div>`;
+  const monthsChart = `<div class="overflow-x-auto"><div class="min-w-[36rem]">
+    <div class="relative flex h-56 items-end gap-1.5 border-b border-neutral-950/15 dark:border-white/15">
+      ${s.months.map((m) => `<div class="flex h-full flex-1 items-end" data-tip="${esc(m.label)}: ${h(m.hours)}${m.hours > NORM ? ` · понад норму +${fmtHours(m.hours - NORM)}` : ''}">
+        <div class="w-full rounded-t-[4px] ${m.hours > NORM ? 'bg-neutral-950 dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-600'}" style="height:${y1(m.hours)}"></div></div>`).join('')}
+      ${refLine(NORM, `норма ${NORM}`, 'border-dotted border-neutral-950/50 dark:border-white/50')}
+      ${refLine(s.avg, `середнє ${fmtHours(Math.round(s.avg))}`, 'border-dashed border-neutral-950/30 dark:border-white/30')}
+    </div>${labels}</div></div>
+    <p class="mt-2 flex items-center gap-2 text-xs ${muted}"><span class="size-2.5 rounded-sm bg-neutral-950 dark:bg-white"></span>місяці понад норму</p>`;
+
+  // Проєкти по місяцях: складені стовпчики
+  const max2 = Math.max(...s.months.map((_, mi) => s.projects.reduce((t, p) => t + p.months[mi], 0)), 1) * 1.05;
+  const legend = `<div class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">${s.projects.map((p) => `<span class="flex items-center gap-1.5"><span class="size-2.5 rounded-sm" style="background:${p.color}"></span>${esc(p.name)}</span>`).join('')}</div>`;
+  const stacked = `${legend}<div class="overflow-x-auto"><div class="min-w-[36rem]">
+    <div class="flex h-56 items-end gap-1.5 border-b border-neutral-950/15 dark:border-white/15">
+      ${s.months.map((m, mi) => {
+        const segs = s.projects.filter((p) => p.months[mi] > 0);
+        return `<div class="flex h-full flex-1 flex-col-reverse gap-[2px]">${segs.map((p, si) => `<div data-tip="${esc(m.label)} · ${esc(p.name)}: ${h(p.months[mi])}" class="w-full ${si === segs.length - 1 ? 'rounded-t-[4px]' : ''}" style="height:${((p.months[mi] / max2) * 100).toFixed(2)}%;background:${p.color}"></div>`).join('')}</div>`;
+      }).join('')}
+    </div>${labels}</div></div>`;
+
+  // Горизонтальні смуги (проєкти, типи робіт)
+  const barList = (rows, total) => {
+    const max = Math.max(...rows.map((r) => r.total), 1);
+    return `<div class="space-y-2.5">${rows.map((r) => `<div class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 text-sm sm:grid-cols-[minmax(0,11rem)_1fr_7.5rem]" data-tip="${esc(r.name)}: ${h(r.total)} (${pct(r.total, total)})">
+      <span class="truncate">${esc(r.name)}</span>
+      <div class="order-last col-span-2 h-2.5 sm:order-none sm:col-span-1"><div class="h-full rounded-r-[4px]" style="width:${((r.total / max) * 100).toFixed(2)}%;background:${r.color || 'var(--color-neutral-500)'}"></div></div>
+      <span class="text-right tabular-nums ${muted}">${fmtHours(Math.round(r.total * 10) / 10)} · ${pct(r.total, total)}</span></div>`).join('')}</div>`;
+  };
+  const projSum = sumHours(s.projects.map((p) => ({ hours: p.total })));
+  const catSum = sumHours(s.cats.map((c) => ({ hours: c.total })));
+
+  const top = `<div class="overflow-x-auto"><table class="w-full text-left text-sm">
+    <thead class="text-xs ${muted}"><tr class="border-b border-neutral-950/10 dark:border-white/10"><th class="py-2 pr-3 font-medium">Місяць</th><th class="py-2 pr-3 font-medium">Задача</th><th class="py-2 pr-3 font-medium">Проєкт</th><th class="py-2 text-right font-medium">Годин</th></tr></thead>
+    <tbody>${s.top.map((i) => `<tr class="border-b border-neutral-950/5 dark:border-white/5"><td class="py-2 pr-3 whitespace-nowrap ${muted}">${esc(i.month)}</td><td class="py-2 pr-3">${esc(i.title)}</td><td class="py-2 pr-3 whitespace-nowrap ${muted}">${esc(i.project)}</td><td class="py-2 text-right tabular-nums">${fmtHours(i.hours)}</td></tr>`).join('')}</tbody></table></div>`;
+
+  const monthTable = `<details class="mt-3 text-sm"><summary class="cursor-pointer ${muted}">Таблиця по місяцях</summary>
+    <table class="mt-2 w-full max-w-xs text-sm"><tbody>${s.months.map((m) => `<tr class="border-b border-neutral-950/5 dark:border-white/5"><td class="py-1 ${muted}">${esc(m.label)}</td><td class="py-1 text-right tabular-nums">${fmtHours(m.hours)}</td></tr>`).join('')}</tbody></table></details>`;
+
+  $('#stats').innerHTML = `
+    <div><h2 class="text-xl font-semibold">${esc(s.months[0].label)} — ${esc(s.months.at(-1).label)}</h2>
+      <p class="mt-1 text-sm ${muted}">${s.months.length} міс. · норма ${NORM} год/міс · рядки «Overtime…» не враховуються</p></div>
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+      ${tile('Всього годин', fmtHours(Math.round(s.total * 10) / 10))}
+      ${tile('Середнє на місяць', fmtHours(Math.round(s.avg * 10) / 10), `медіана ${fmtHours(s.median)}`)}
+      ${tile('Середнє за 6 міс.', fmtHours(Math.round(s.last6 * 10) / 10))}
+      ${tile('Задач виконано', s.done, `проєктів: ${s.projectCount}`)}
+    </div>
+    ${s.over.length ? `<p class="-mt-6 text-sm ${muted}">Понад норму: ${s.over.map((m) => `${esc(m.label)} (+${fmtHours(m.hours - NORM)})`).join(', ')}</p>` : ''}
+    ${section('Години по місяцях', '', monthsChart + monthTable)}
+    ${section('Проєкти по місяцях', '', stacked)}
+    ${section('Розподіл по проєктах', `${h(Math.round(projSum * 10) / 10)} у задачах`, barList(s.projects, projSum))}
+    ${section('Типи робіт', 'За ключовими словами в назві задачі', barList(s.cats, catSum))}
+    ${section('Найбільші задачі', '', top)}`;
+}
+
+const tip = $('#tip');
+function showTip(e) {
+  const t = e.target.closest?.('[data-tip]');
+  if (!t) return void (tip.hidden = true);
+  tip.textContent = t.dataset.tip;
+  tip.hidden = false;
+  tip.style.left = `${Math.max(8, Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8))}px`;
+  tip.style.top = `${Math.max(8, e.clientY - tip.offsetHeight - 12)}px`;
+}
+$('#stats').addEventListener('pointermove', showTip);
+$('#stats').addEventListener('pointerdown', showTip);
+$('#stats').addEventListener('pointerleave', () => { tip.hidden = true; });
+
+// ---------- старт ----------
+const hashKey = new URLSearchParams(location.hash.slice(1)).get('key');
+if (hashKey) {
+  store.set('kanbanKey', hashKey);
+  history.replaceState(null, '', location.pathname + location.search);
+}
+key = hashKey || store.get('kanbanKey') || '';
+if (key) start(); else logout();
+</script>
+</body>
+</html>
