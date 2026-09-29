@@ -47,7 +47,7 @@
     </div>
   </header>
   <main id="stats" hidden class="mx-auto w-full max-w-5xl space-y-10 p-4 pb-16"></main>
-  <main id="board" class="flex flex-1 snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto p-4 md:snap-none"></main>
+  <main id="board" class="flex flex-1 flex-col gap-3 p-4 lg:flex-row lg:items-start"></main>
 </div>
 
 <dialog id="editDialog" class="m-auto w-[min(32rem,calc(100%-2rem))] rounded-lg border border-neutral-950/10 bg-white p-0 text-neutral-950 shadow-xl backdrop:bg-neutral-950/40 dark:border-white/10 dark:bg-neutral-900 dark:text-white">
@@ -307,18 +307,9 @@ function dropTarget(list) {
 function columnHtml(status, cols, items) {
   const hours = items.reduce((s, i) => s + (i.hours || 0), 0);
   const dot = DOT[norm(status)] || 'border border-dashed border-neutral-400 dark:border-neutral-500';
-  // Порожні додаткові статуси (Hold, Review…) — вузька смужка; на неї все одно можна кинути картку.
-  if (!items.length && !DOT[norm(status)]) {
-    return `<section class="flex w-36 shrink-0 snap-start flex-col rounded-lg bg-neutral-50 dark:bg-white/5">
-      <div class="flex items-center gap-2 px-3 pt-3 pb-2">
-        <span class="size-2 shrink-0 rounded-full ${dot}"></span>
-        <h2 class="truncate text-sm font-medium text-neutral-500 dark:text-neutral-400">${esc(status || 'Без статусу')}</h2>
-        <span class="text-sm tabular-nums text-neutral-400 dark:text-neutral-500">0</span>
-      </div>
-      <div data-list="${esc(status)}" class="flex min-h-40 flex-1 flex-col gap-2 rounded-lg px-2 pb-2"></div>
-    </section>`;
-  }
-  return `<section class="flex w-[85%] max-w-sm shrink-0 snap-start flex-col rounded-lg bg-neutral-50 md:w-auto md:max-w-none md:min-w-60 md:flex-1 md:shrink dark:bg-white/5">
+  // Порожні додаткові статуси (Hold, Approved, Canceled…) не показуємо; з'являються, щойно в них є задача.
+  if (!items.length && !DOT[norm(status)]) return '';
+  return `<section class="flex min-w-0 flex-col rounded-lg bg-neutral-50 lg:flex-1 dark:bg-white/5">
     <div class="flex items-center gap-2 px-3 pt-3 pb-2">
       <span class="size-2 shrink-0 rounded-full ${dot}"></span>
       <h2 class="truncate text-sm font-medium">${esc(status || 'Без статусу')}</h2>

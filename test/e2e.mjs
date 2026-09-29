@@ -195,13 +195,13 @@ await test('екран ключа і невірний ключ', async () => {
 await test('скриншоти 1280/390 × світла/темна', async () => {
   mkdirSync('test/screenshots', { recursive: true });
   for (const scheme of ['light', 'dark']) {
-    for (const [w, h] of [[1280, 900], [390, 844]]) {
+    for (const [w, h] of [[1280, 900], [1024, 768], [390, 844]]) {
       const p = await browser.newPage({ viewport: { width: w, height: h }, colorScheme: scheme });
       await p.goto(`${PAGE}#key=${KEY}`);
       await p.locator('article').first().waitFor();
       await p.screenshot({ path: `test/screenshots/board-${w}-${scheme}.png` });
-      const overflow = await p.evaluate(() => document.documentElement.scrollWidth > innerWidth);
-      assert.equal(overflow, false, `горизонтальний скрол сторінки на ${w}px`);
+      const overflow = await p.evaluate(() => [document.documentElement, document.querySelector('#board')].some((el) => el.scrollWidth > el.clientWidth));
+      assert.equal(overflow, false, `горизонтальний скрол на ${w}px`);
       if (w === 390) {
         await p.locator('article').first().click();
         await p.screenshot({ path: `test/screenshots/edit-${w}-${scheme}.png` });
