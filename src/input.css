@@ -44,6 +44,12 @@ html.has-sf select { /* SF Symbol chevron.down, коли SF Pro Rounded вста
 }
 .sf { font-family: "SF Pro Rounded"; font-style: normal; line-height: 1; }
 
+/* Чіп проєкту: тон кольору проєкту зі статистики (--c задається в розмітці). */
+.chip { background: color-mix(in srgb, var(--c) 32%, transparent); }
+@media (prefers-color-scheme: dark) {
+  .chip { background: color-mix(in srgb, var(--c) 45%, transparent); }
+}
+
 /* Перетягування карток (SortableJS). Без @layer, щоб перекрити утиліти картки. */
 .drag-ghost { /* місце, куди впаде картка */
   @apply border-2 border-dashed border-neutral-300 bg-transparent shadow-none dark:border-neutral-600;

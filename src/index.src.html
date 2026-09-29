@@ -153,6 +153,7 @@ function logout(msg) {
   store.set('kanbanBoot', null);
   store.set('kanbanStats', null);
   Object.assign(state, { data: null, lists: {}, stats: null });
+  projectColors = null;
   $('#app').hidden = true;
   $('#keyScreen').hidden = false;
   $('#keyError').textContent = msg || '';
@@ -345,12 +346,32 @@ function columnHtml(status, cols, items) {
   </section>`;
 }
 
+// Колір проєкту — той самий, що в статистиці (рейтинг за годинами за весь період). Поки статистики немає — сірий.
+let projectColors = null;
+function projectColor(name) {
+  if (!projectColors) {
+    const stats = state.stats || cacheGet('kanbanStats');
+    if (!stats) return null;
+    projectColors = new Map(computeStats(stats).projects.filter((p) => !p.other).map((p) => [norm(p.name), p.color]));
+  }
+  return projectColors.get(norm(name));
+}
+
+function chipHtml(name) {
+  const color = projectColor(name);
+  return color
+    ? `<span class="chip inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-medium text-neutral-800 dark:text-neutral-100" style="--c:${color}"><span class="size-1.5 rounded-full" style="background:var(--c)"></span>${esc(name)}</span>`
+    : `<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-medium text-neutral-700 dark:bg-white/10 dark:text-neutral-300">${esc(name)}</span>`;
+}
+
 function cardHtml(i, cols) {
   const meta = [
-    i.project && `<span class="rounded bg-neutral-100 px-1.5 py-0.5 font-medium text-neutral-700 dark:bg-white/10 dark:text-neutral-300">${esc(i.project)}</span>`,
+    i.project && chipHtml(i.project),
     i.hours != null && `<span class="tabular-nums">${fmtHours(i.hours)} год</span>`,
     i.assignee && `<span>${esc(i.assignee)}</span>`,
-    i.doneDate ? `<span title="Дата виконання" class="inline-flex items-center gap-0.5">${ICON_CHECK}${esc(i.doneDate)}</span>` : i.deadline && `<span title="Дедлайн">до ${esc(i.deadline)}</span>`,
+    i.doneDate && norm(i.status) === 'done' ? `<span title="Виконано" class="inline-flex items-center gap-0.5">${ICON_CHECK}${esc(i.doneDate)}</span>`
+      : i.deadline ? `<span title="Дедлайн">до ${esc(i.deadline)}</span>`
+      : i.doneDate && `<span title="Дата">${esc(i.doneDate)}</span>`,
   ].filter(Boolean).join('');
   const links = [[i.briefLink, 'ТЗ', ICON_BRIEF], [i.fileLink, 'Файл', ICON_FILE]]
     .filter(([u]) => safeUrl(u))
@@ -561,7 +582,9 @@ async function loadStats({ fresh = false, background = false } = {}) {
     state.stats = (await api({ action: 'all', ...(fresh && { fresh: 1 }) })).tabs;
     state.statsStale = false;
     cacheSet('kanbanStats', state.stats);
+    projectColors = null;
     if (visible()) renderStats();
+    else if (state.data && !state.dragging && !state.pending && !document.querySelector('[data-add-form]')) render(); // кольори чіпів
   } catch (e) {
     if (e.code === 'unauthorized' || !visible()) return;
     if (state.stats) toast(e.message); else msg(e.message);
