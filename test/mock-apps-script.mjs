@@ -75,6 +75,7 @@ function fakeServices(fx) {
       tab.formats ??= {};
       const grid = (fn) => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => fn((tab.rows[r - 1 + i] || [])[c - 1 + j] ?? '', tab.formats[`${r + i},${c + j}`])));
       return {
+        getRow: () => r,
         getValues: () => grid((v) => v),
         getDisplayValues: () => grid(display),
         getValue: () => grid((v) => v)[0][0],
@@ -97,6 +98,7 @@ function fakeServices(fx) {
       getLastColumn: lastCol,
       getRange: range,
       insertRowAfter: (r) => tab.rows.splice(r, 0, []),
+      moveRows: (rng, dest) => { const r = rng.getRow(); const [row] = tab.rows.splice(r - 1, 1); tab.rows.splice(dest > r ? dest - 2 : dest - 1, 0, row); },
     };
   };
   const ss = {

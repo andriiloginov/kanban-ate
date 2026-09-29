@@ -1,7 +1,7 @@
 /**
  * Канбан API для таблиці «Design 2025». Інструкція — README.md.
  * GET  ?action=tabs|list|all&tab=...&key=...   (all — усі вкладки-місяці одразу, для статистики)
- * POST {action: "update"|"create", key, ...}  (Content-Type: text/plain)
+ * POST {action: "update"|"create"|"move", key, ...}  (Content-Type: text/plain)
  */
 
 const HIDDEN_TABS = ['зведена таблиця']; // платіжні реквізити — ніколи не читати
@@ -39,7 +39,7 @@ function doPost(e) {
   } catch (err) {
     return json({ error: 'bad_request' });
   }
-  return respond(body, ['update', 'create']);
+  return respond(body, ['update', 'create', 'move']);
 }
 
 function respond(p, allowed) {
@@ -98,6 +98,23 @@ const ACTIONS = {
     SpreadsheetApp.flush();
     resetCache();
     return { item: readRow(sheet, header, row) };
+  }),
+
+  // Порядок карток = порядок рядків: рядок row переїжджає одразу перед рядком before
+  // (або одразу після рядка after, якщо картку кинули в кінець колонки). Обидва рядки звіряються за назвою.
+  move: (p) => withLock(() => {
+    const b = getBoard(p.tab);
+    if (!b) return { error: 'tab_not_found' };
+    const { sheet, header } = b, last = sheet.getLastRow();
+    const same = (row, title) => row > header.row && row <= last &&
+      String(sheet.getRange(row, header.cols.title + 1).getDisplayValue()).trim() === String(title == null ? '' : title).trim();
+    const row = Number(p.row), target = Number(p.before || p.after);
+    if (!same(row, p.expectedTitle) || !same(target, p.before ? p.beforeTitle : p.afterTitle)) return { error: 'conflict' };
+    const dest = p.before ? target : target + 1; // індекс «перед яким рядком» — у координатах до переміщення
+    if (dest !== row && dest !== row + 1) sheet.moveRows(sheet.getRange(row, 1), dest);
+    SpreadsheetApp.flush();
+    resetCache();
+    return { ok: true };
   }),
 
   create: (p) => withLock(() => {

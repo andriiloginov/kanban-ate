@@ -77,6 +77,8 @@ await test('завантаження дошки з #key, ключ прибран
   assert.equal(new URL(page.url()).hash, '');
   assert.equal(await page.evaluate(() => localStorage.getItem('kanbanKey')), KEY);
   for (const s of ['Not started', 'In progress', 'Done']) assert.equal(await column(s).count(), 1);
+  assert.equal(await column('Hold').count(), 0, 'порожній додатковий статус прихований');
+  assert.deepEqual(await card('Логотип').locator('select option').allTextContents(), ['Not started', 'In progress', 'Done']);
   assert.equal(await column('Not started').locator('article').count(), 3);
   assert.match(await page.textContent('#total'), /21 год/);
 });
@@ -95,6 +97,28 @@ await test('перемикання місяця + невідомий стату�
   await column('On hold').locator('article', { hasText: 'Старий макет' }).waitFor();
   await page.selectOption('#tabSelect', 'Sep 26');
   await card('Банер для сайту').waitFor();
+});
+
+await test('перестановка в межах колонки переміщує рядок у таблиці', async () => {
+  const titles = () => tab('Sep 26').rows.map((r) => r[0]).filter((t) => ['Іконки для застосунку', 'Логотип', 'Пости для соцмереж'].includes(t));
+  assert.deepEqual(titles(), ['Іконки для застосунку', 'Логотип', 'Пости для соцмереж']);
+  const from = await card('Пости для соцмереж').boundingBox(), to = await card('Іконки для застосунку').boundingBox();
+  await page.mouse.move(from.x + 20, from.y + 15);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 30, from.y + 5, { steps: 5 });
+  await page.mouse.move(to.x + 20, to.y + 8, { steps: 15 });
+  await page.mouse.up();
+  await until(() => titles()[0] === 'Пости для соцмереж');
+  assert.deepEqual(titles(), ['Пости для соцмереж', 'Іконки для застосунку', 'Логотип']);
+  await page.waitForFunction(() => !document.querySelector('#refreshBtn').disabled);
+  const order = await column('Not started').locator('article p.font-medium').allTextContents();
+  assert.deepEqual(order, ['Пости для соцмереж', 'Іконки для застосунку', 'Логотип']);
+  const stale = await post({ action: 'move', key: KEY, tab: 'Sep 26', row: 4, expectedTitle: 'Іконки для застосунку', before: 5, beforeTitle: 'Логотип' });
+  assert.deepEqual(stale, { error: 'conflict' }, 'рядки вже зсунулись — старі номери дають conflict');
+  // вниз: «після» останньої картки (Aug 26 UI зараз не відкрита)
+  assert.deepEqual(await post({ action: 'move', key: KEY, tab: 'Aug 26', row: 3, expectedTitle: 'Серпневий лендінг', after: 4, afterTitle: 'Гайдлайн кольорів' }), { ok: true });
+  assert.deepEqual(tab('Aug 26').rows.slice(2, 4).map((r) => r[2]), ['Гайдлайн кольорів', 'Серпневий лендінг']);
+  await page.waitForTimeout(350);
 });
 
 await test('перетягування в Done записує статус і дату', async () => {
