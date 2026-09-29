@@ -10,7 +10,7 @@ const root = new URL('../', import.meta.url);
 export const KEY = 'test-key';
 const isDate = (v) => Object.prototype.toString.call(v) === '[object Date]';
 const d = (y, m, day) => new Date(y, m - 1, day);
-const STATUS_LIST = ['Not started', 'In progress', 'Done'];
+const STATUS_LIST = ['Not started', 'In progress', 'Hold', 'Review', 'Done'];
 
 export function makeFixture() {
   return {
@@ -67,6 +67,7 @@ function display(v, fmt = '') {
 const empty = (v) => v === '' || v == null;
 
 function fakeServices(fx) {
+  const props = { ADMIN_KEY: KEY }, cache = new Map(); // ponytail: кеш без TTL — у тестах він не потрібен
   const sheet = (tab) => {
     const lastRow = () => tab.rows.reduce((last, r, i) => (r.some((v) => !empty(v)) ? i + 1 : last), 0);
     const lastCol = () => Math.max(0, ...tab.rows.map((r) => r.reduce((l, v, i) => (empty(v) ? l : i + 1), 0)));
@@ -110,7 +111,8 @@ function fakeServices(fx) {
       DataValidationCriteria: { VALUE_IN_LIST: 'VALUE_IN_LIST', VALUE_IN_RANGE: 'VALUE_IN_RANGE' },
     },
     LockService: { getScriptLock: () => ({ waitLock: () => fx.locks++, releaseLock() {} }) },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => ({ ADMIN_KEY: KEY })[k] ?? null, setProperty() {} }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null, setProperty: (k, v) => { props[k] = v; } }) },
+    CacheService: { getScriptCache: () => ({ get: (k) => cache.get(k) ?? null, put: (k, v) => { cache.set(k, v); } }) },
     ContentService: {
       MimeType: { JSON: 'application/json' },
       createTextOutput: (s) => ({ setMimeType() { return this; }, getContent: () => s }),
@@ -148,7 +150,9 @@ export function startMock({ port = 0, fixture = makeFixture() } = {}) {
     }
     res.writeHead(req.method === 'OPTIONS' ? 405 : 404).end(); // жодного CORS preflight
   });
-  return new Promise((ok) => server.listen(port, () => ok({ server, fixture, port: server.address().port })));
+  // onEdit() — імітує ручну правку таблиці (простий тригер скидає кеш).
+  const onEdit = () => vm.runInContext('onEdit', gs)();
+  return new Promise((ok) => server.listen(port, () => ok({ server, fixture, onEdit, port: server.address().port })));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

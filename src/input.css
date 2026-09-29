@@ -6,16 +6,41 @@
 @font-face { font-family: "Mariupol"; font-weight: 500; font-display: swap; src: url("../fonts/Mariupol-Medium.woff2") format("woff2"); }
 @font-face { font-family: "Mariupol"; font-weight: 600 700; font-display: swap; src: url("../fonts/Mariupol-Bold.woff2") format("woff2"); }
 
-/* Категорійна палітра для проєктів у статистиці (dataviz reference palette, перевірена на CVD). */
+/* Кольори графіків — палітра Alterate (Figma «Гайдлайни Альтерейт → Колір»).
+   Проєкти: порядок перевірено валідатором на розрізнення при дальтонізмі (CVD ΔE ≥ 10). */
 :root {
-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
-  --series-5: #e87ba4; --series-6: #008300; --series-7: #4a3aa7; --series-other: #a3a3a3;
+  --series-1: #e4862b; /* orange 500 */
+  --series-2: #5d6b4f; /* sage 600 */
+  --series-3: #869fa3; /* blue 400 */
+  --series-4: #ef4d43; /* red 400 */
+  --series-5: #887189; /* mauve 500 */
+  --series-6: #a09f0f; /* yellow 400 */
+  --series-7: #b1541d; /* orange 700 */
+  --series-other: #a3a3a3;
+  --viz-bar: #ccd3c3;      /* sage 200 — місяць у нормі */
+  --viz-bar-over: #454f3c; /* sage 700 — понад норму */
+  --viz-cat: #887189;      /* mauve 500 — типи робіт */
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
-    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-other: #737373;
+    --series-other: #737373;
+    --viz-bar: #454f3c;
+    --viz-bar-over: #ccd3c3;
+    --viz-cat: #b4a0b5;    /* mauve 300 */
   }
+}
+
+/* Перетягування карток (SortableJS). Без @layer, щоб перекрити утиліти картки. */
+.drag-ghost { /* місце, куди впаде картка */
+  @apply border-2 border-dashed border-neutral-300 bg-transparent shadow-none dark:border-neutral-600;
+}
+.drag-ghost > * { visibility: hidden; }
+.drag-clone { /* картка під курсором */
+  @apply rotate-2 cursor-grabbing shadow-xl ring-1 ring-neutral-950/10 dark:ring-white/20;
+  opacity: 1 !important;
+}
+.drop-target { /* колонка під курсором */
+  @apply bg-neutral-950/[0.04] ring-2 ring-neutral-950/10 ring-inset dark:bg-white/[0.06] dark:ring-white/15;
 }
 
 @theme {

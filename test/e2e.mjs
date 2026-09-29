@@ -4,7 +4,7 @@ import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { startMock, KEY } from './mock-apps-script.mjs';
 
-const { server, fixture, port } = await startMock();
+const { server, fixture, onEdit, port } = await startMock();
 const API = `http://127.0.0.1:${port}/exec`;
 const PAGE = `http://localhost:${port}/`;
 const tab = (name) => fixture.tabs.find((t) => t.name === name);
@@ -51,6 +51,18 @@ await test('list: колонки за назвою, числа, trim стату�
   assert.equal(sep.items.length, 5, 'порожній рядок пропущено');
   assert.equal(sep.items[0].status, 'In progress');
   assert.equal(sep.items[0].deadlineIso, '2026-10-03');
+});
+
+await test('кеш: ручна правка без onEdit не видна, fresh=1 і onEdit — видно', async () => {
+  const q = { action: 'list', tab: 'Aug 26', key: KEY };
+  const title = (r) => r.items.find((i) => i.row === 3).title;
+  assert.equal(title(await get(q)), 'Серпневий лендінг');
+  tab('Aug 26').rows[2][2] = 'Серпневий лендінг 2';
+  assert.equal(title(await get(q)), 'Серпневий лендінг', 'з кешу');
+  assert.equal(title(await get({ ...q, fresh: 1 })), 'Серпневий лендінг 2');
+  tab('Aug 26').rows[2][2] = 'Серпневий лендінг';
+  onEdit();
+  assert.equal(title(await get(q)), 'Серпневий лендінг');
 });
 
 await test('conflict при зміненому рядку (API)', async () => {
@@ -142,6 +154,7 @@ await test('conflict у UI: дошка перезавантажується', as
   await page.selectOption('#tabSelect', 'Sep 26');
   await card('Логотип').waitFor();
   rowOf('Sep 26', 'Логотип')[0] = 'Логотип v2';
+  onEdit();
   await card('Логотип').locator('select').selectOption('In progress');
   await page.locator('#toast', { hasText: 'змінився' }).waitFor();
   await column('Not started').locator('article', { hasText: 'Логотип v2' }).waitFor();
@@ -155,8 +168,10 @@ await test('статистика: усі місяці одним запитом,
   await page.click('[data-view=stats]');
   await page.getByText('Найбільші задачі').waitFor();
   assert.equal(await page.locator('#board').isHidden(), true);
-  const total = await page.locator('#stats p', { hasText: 'Всього годин' }).locator('xpath=following-sibling::p[1]').textContent();
-  assert.equal(Number(total.replace(/\s/g, '').replace(',', '.')), expected);
+  const totalEl = page.locator('#stats p', { hasText: 'Всього годин' }).locator('xpath=following-sibling::p[1]');
+  const shown = async () => Number((await totalEl.textContent()).replace(/\s/g, '').replace(',', '.'));
+  for (let i = 0; i < 50 && (await shown()) !== expected; i++) await page.waitForTimeout(100); // спершу — з кешу, потім свіже
+  assert.equal(await shown(), expected);
   assert.equal(await page.getByText('Overtime extimate').count(), 0);
   await page.getByText('Вер 25 — Вер 26').waitFor();
   await page.reload();

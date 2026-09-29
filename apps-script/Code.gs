@@ -19,6 +19,7 @@ const FIELDS = {
 };
 const EDITABLE = ['title', 'hours', 'project', 'status', 'assignee', 'comment', 'deadline', 'doneDate'];
 const DEFAULT_STATUSES = ['Not started', 'In progress', 'Done'];
+const CACHE_TTL = 300; // с. Кеш скидається одразу при записі через API і при ручній правці таблиці (onEdit).
 
 /** Запустіть один раз вручну: згенерує ключ доступу і виведе його в журнал. */
 function setup() {
@@ -59,31 +60,24 @@ function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
+// fresh=1 у запиті — оминути кеш (кнопка «Оновити»).
 const ACTIONS = {
-  tabs: () => ({ tabs: boardSheets().map((s) => ({ name: s.getName() })) }),
+  tabs: (p) => cached('tabs', p && p.fresh, () => ({ tabs: boardSheets().map((s) => ({ name: s.getName() })) })),
 
-  all: () => ({ tabs: boardSheets().map((s) => ACTIONS.list({ tab: s.getName() })) }),
+  all: (p) => ({ tabs: ACTIONS.tabs(p).tabs.map((t) => cached('list:' + t.name, p.fresh, () => readList(t.name))) }),
 
+  // withTabs=1 — ще й список вкладок (перше відкриття сторінки: один запит замість двох).
   list: (p) => {
-    const b = getBoard(p.tab);
-    if (!b) return { error: 'tab_not_found' };
-    const { sheet, header } = b;
-    const first = header.row + 1, last = sheet.getLastRow(), items = [];
-    if (last >= first) {
-      const range = sheet.getRange(first, 1, last - first + 1, header.width);
-      const values = range.getValues(), display = range.getDisplayValues();
-      values.forEach((v, i) => {
-        const item = toItem(header.cols, v, display[i], first + i);
-        if (item) items.push(item);
-      });
+    const tabs = p.withTabs ? ACTIONS.tabs(p).tabs : null;
+    let tab = p.tab;
+    if (tabs && !tabs.some((t) => t.name === tab)) {
+      if (!tabs.length) return { error: 'no_tabs' };
+      tab = tabs[0].name; // вкладку не вказано або перейменовано — відкриваємо найновішу
     }
-    return {
-      tab: sheet.getName(),
-      columns: Object.keys(FIELDS).filter((f) => header.cols[f] != null),
-      statuses: rawStatuses(sheet, header).map((s) => s.trim()),
-      items,
-    };
+    const res = cached('list:' + tab, p.fresh, () => readList(tab));
+    return tabs && !res.error ? Object.assign({}, res, { tabs }) : res;
   },
+
 
   update: (p) => withLock(() => {
     const b = getBoard(p.tab);
@@ -102,6 +96,7 @@ const ACTIONS = {
     if (writes.error) return writes;
     writeCells(sheet, row, writes);
     SpreadsheetApp.flush();
+    resetCache();
     return { item: readRow(sheet, header, row) };
   }),
 
@@ -132,9 +127,57 @@ const ACTIONS = {
     if (cols.num != null) writes.push([cols.num, maxNum + 1]);
     writeCells(sheet, row, writes);
     SpreadsheetApp.flush();
+    resetCache();
     return { item: readRow(sheet, header, row) };
   }),
 };
+
+function readList(tab) {
+  const b = getBoard(tab);
+  if (!b) return { error: 'tab_not_found' };
+  const { sheet, header } = b;
+  const first = header.row + 1, last = sheet.getLastRow(), items = [];
+  if (last >= first) {
+    const range = sheet.getRange(first, 1, last - first + 1, header.width);
+    const values = range.getValues(), display = range.getDisplayValues();
+    values.forEach((v, i) => {
+      const item = toItem(header.cols, v, display[i], first + i);
+      if (item) items.push(item);
+    });
+  }
+  return {
+    tab: sheet.getName(),
+    columns: Object.keys(FIELDS).filter((f) => header.cols[f] != null),
+    statuses: rawStatuses(sheet, header).map((s) => s.trim()),
+    items,
+  };
+}
+
+/** Кеш відповідей. Ключі містять «версію», тож скинути весь кеш = змінити версію. */
+function cached(key, fresh, fn) {
+  const cache = CacheService.getScriptCache();
+  const k = cacheVersion() + ':' + key;
+  if (!fresh) {
+    const hit = cache.get(k);
+    if (hit) return JSON.parse(hit);
+  }
+  const res = fn(), text = JSON.stringify(res);
+  if (!res.error && text.length < 100000) cache.put(k, text, CACHE_TTL); // ліміт CacheService — 100 КБ на ключ
+  return res;
+}
+
+function cacheVersion() {
+  return PropertiesService.getScriptProperties().getProperty('CACHE_V') || '0';
+}
+
+function resetCache() {
+  PropertiesService.getScriptProperties().setProperty('CACHE_V', String(Date.now()));
+}
+
+/** Простий тригер: будь-яка ручна правка в таблиці скидає кеш. */
+function onEdit() {
+  resetCache();
+}
 
 function withLock(fn) {
   const lock = LockService.getScriptLock();
