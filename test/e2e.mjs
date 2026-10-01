@@ -35,6 +35,7 @@ await test('unauthorized без ключа (GET і POST)', async () => {
   assert.deepEqual(await post({ action: 'create', tab: 'Sep 26', item: { title: 'x' } }), { error: 'unauthorized' });
   assert.deepEqual(await get({ action: 'tabs', key: '' }), { error: 'unauthorized' });
   assert.ok((await get({ action: 'tabs', key: 'user-key' })).tabs, 'USER_KEY теж пускає');
+  assert.equal((await get({ action: 'ping' })).ok, true, 'ping без ключа — лише версія');
 });
 
 await test('«Зведена таблиця» не видно через API', async () => {
@@ -213,6 +214,12 @@ await test('статистика: усі місяці одним запитом,
 });
 
 await test('записи під LockService', () => assert.ok(fixture.locks >= 4));
+
+await test('вихід: ключ і кеш стерто, екран входу', async () => {
+  await page.click('#logoutBtn');
+  await page.getByText('Введіть ключ доступу').waitFor();
+  assert.deepEqual(await page.evaluate(() => [localStorage.getItem('kanbanKey'), localStorage.getItem('kanbanBoot')]), [null, null]);
+});
 
 await test('екран ключа і невірний ключ', async () => {
   const p = await browser.newPage();

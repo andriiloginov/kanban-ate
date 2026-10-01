@@ -1,5 +1,5 @@
 /**
- * Канбан API для таблиці «Design 2025». Інструкція — README.md.
+ * Канбан API для таблиці «Design 2025-2026». Інструкція — README.md.
  * GET  ?action=tabs|list|all&tab=...&key=...   (all — усі вкладки-місяці одразу, для статистики)
  * POST {action: "update"|"create"|"move", key, ...}  (Content-Type: text/plain)
  */
@@ -19,6 +19,7 @@ const FIELDS = {
 };
 const EDITABLE = ['title', 'hours', 'project', 'status', 'assignee', 'comment', 'deadline', 'doneDate'];
 const DEFAULT_STATUSES = ['Not started', 'In progress', 'Done'];
+const VERSION = '2026-10-01'; // видно за адресою …/exec?action=ping — так легко перевірити, що розгорнута свіжа версія
 const CACHE_TTL = 300; // с. Кеш скидається одразу при записі через API і при ручній правці таблиці (onEdit).
 
 /** Запустіть один раз вручну: згенерує ключ доступу і виведе його в журнал. */
@@ -28,7 +29,17 @@ function setup() {
   Logger.log('ADMIN_KEY: ' + key);
 }
 
+/** Запустіть вручну, якщо сайт «не бачить» змін: покаже, яка це таблиця, версія коду й адреса вебдодатку. */
+function diagnose() {
+  const props = PropertiesService.getScriptProperties();
+  Logger.log('Таблиця: ' + SpreadsheetApp.getActiveSpreadsheet().getName() + ' (' + SpreadsheetApp.getActiveSpreadsheet().getId() + ')');
+  Logger.log('Версія коду: ' + VERSION);
+  Logger.log('URL вебдодатку: ' + ScriptApp.getService().getUrl());
+  Logger.log('ADMIN_KEY задано: ' + !!props.getProperty('ADMIN_KEY') + ', USER_KEY задано: ' + !!props.getProperty('USER_KEY'));
+}
+
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'ping') return json({ ok: true, version: VERSION }); // без ключа: лише версія
   return respond(e && e.parameter, ['tabs', 'list', 'all']);
 }
 
@@ -48,8 +59,8 @@ function respond(p, allowed) {
   try {
     // ADMIN_KEY — ваш ключ; USER_KEY (необов'язковий) — окремий ключ для інших з тими самими правами.
     const props = PropertiesService.getScriptProperties();
-    const keys = [props.getProperty('ADMIN_KEY'), props.getProperty('USER_KEY')].filter(Boolean);
-    if (!p.key || keys.indexOf(String(p.key)) < 0) res = { error: 'unauthorized' };
+    const keys = [props.getProperty('ADMIN_KEY'), props.getProperty('USER_KEY')].map((k) => String(k || '').trim()).filter(Boolean);
+    if (!p.key || keys.indexOf(String(p.key).trim()) < 0) res = { error: 'unauthorized' }; // trim — випадковий пробіл у властивості не ламає вхід
     else if (allowed.indexOf(p.action) < 0) res = { error: 'unknown_action' };
     else res = ACTIONS[p.action](p);
   } catch (err) {
