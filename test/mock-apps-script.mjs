@@ -15,6 +15,7 @@ const STATUS_LIST = ['Not started', 'In progress', 'Hold', 'Review', 'Done'];
 export function makeFixture() {
   return {
     locks: 0,
+    copies: [],
     tabs: [
       {
         name: 'Sep 26',
@@ -67,7 +68,7 @@ function display(v, fmt = '') {
 const empty = (v) => v === '' || v == null;
 
 function fakeServices(fx) {
-  const props = { ADMIN_KEY: KEY }, cache = new Map(); // ponytail: кеш без TTL — у тестах він не потрібен
+  const props = { ADMIN_KEY: KEY, USER_KEY: 'user-key' }, cache = new Map(); // ponytail: кеш без TTL — у тестах він не потрібен
   const sheet = (tab) => {
     const lastRow = () => tab.rows.reduce((last, r, i) => (r.some((v) => !empty(v)) ? i + 1 : last), 0);
     const lastCol = () => Math.max(0, ...tab.rows.map((r) => r.reduce((l, v, i) => (empty(v) ? l : i + 1), 0)));
@@ -76,6 +77,7 @@ function fakeServices(fx) {
       const grid = (fn) => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => fn((tab.rows[r - 1 + i] || [])[c - 1 + j] ?? '', tab.formats[`${r + i},${c + j}`])));
       return {
         getRow: () => r,
+        copyTo: (dest, type) => fx.copies.push({ from: r, to: dest.getRow(), type }),
         getValues: () => grid((v) => v),
         getDisplayValues: () => grid(display),
         getValue: () => grid((v) => v)[0][0],
@@ -111,6 +113,7 @@ function fakeServices(fx) {
       getActive: () => ss,
       flush() {},
       DataValidationCriteria: { VALUE_IN_LIST: 'VALUE_IN_LIST', VALUE_IN_RANGE: 'VALUE_IN_RANGE' },
+      CopyPasteType: { PASTE_FORMAT: 'PASTE_FORMAT', PASTE_DATA_VALIDATION: 'PASTE_DATA_VALIDATION' },
     },
     LockService: { getScriptLock: () => ({ waitLock: () => fx.locks++, releaseLock() {} }) },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => props[k] ?? null, setProperty: (k, v) => { props[k] = v; } }) },

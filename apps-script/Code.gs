@@ -46,8 +46,10 @@ function respond(p, allowed) {
   p = p || {};
   let res;
   try {
-    const key = PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
-    if (!key || p.key !== key) res = { error: 'unauthorized' };
+    // ADMIN_KEY — ваш ключ; USER_KEY (необов'язковий) — окремий ключ для інших з тими самими правами.
+    const props = PropertiesService.getScriptProperties();
+    const keys = [props.getProperty('ADMIN_KEY'), props.getProperty('USER_KEY')].filter(Boolean);
+    if (!p.key || keys.indexOf(String(p.key)) < 0) res = { error: 'unauthorized' };
     else if (allowed.indexOf(p.action) < 0) res = { error: 'unknown_action' };
     else res = ACTIONS[p.action](p);
   } catch (err) {
@@ -94,6 +96,7 @@ const ACTIONS = {
     }
     const writes = cellWrites(sheet, header, patch);
     if (writes.error) return writes;
+    ensureDropdowns(sheet, header, row, writes.map((w) => w[0]));
     writeCells(sheet, row, writes);
     SpreadsheetApp.flush();
     resetCache();
@@ -142,6 +145,11 @@ const ACTIONS = {
     const writes = cellWrites(sheet, header, patch);
     if (writes.error) return writes;
     if (cols.num != null) writes.push([cols.num, maxNum + 1]);
+    // Оформлення і випадні списки (пігулки статусу) — як у задачі вище.
+    const template = row - 1 > header.row ? row - 1 : row + 1;
+    [SpreadsheetApp.CopyPasteType.PASTE_FORMAT, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION].forEach((type) =>
+      sheet.getRange(template, 1, 1, header.width).copyTo(sheet.getRange(row, 1, 1, header.width), type, false));
+    ensureDropdowns(sheet, header, row, writes.map((w) => w[0]));
     writeCells(sheet, row, writes);
     SpreadsheetApp.flush();
     resetCache();
@@ -313,6 +321,36 @@ function toNumber(x) {
   if (typeof x === 'number') return x;
   const s = String(x == null ? '' : x).trim().replace(',', '.');
   return s === '' ? null : Number(s);
+}
+
+/** Випадні списки (пігулки) у вказаних колонках рядка: якщо їх немає, копіює з першої задачі вкладки. */
+function ensureDropdowns(sheet, header, row, cols) {
+  const first = header.row + 1;
+  if (row === first) return;
+  cols.forEach((col) => {
+    const cell = sheet.getRange(row, col + 1), source = sheet.getRange(first, col + 1);
+    if (!cell.getDataValidation() && source.getDataValidation()) {
+      source.copyTo(cell, SpreadsheetApp.CopyPasteType.PASTE_DATA_VALIDATION, false);
+    }
+  });
+}
+
+/** Запустіть вручну, щоб повернути пігулки в задачі, створені раніше без них (усі вкладки-місяці). */
+function repairDropdowns() {
+  let fixed = 0;
+  boardSheets().forEach((sheet) => {
+    const header = readHeader(sheet), first = header.row + 1, last = sheet.getLastRow();
+    if (last <= first) return;
+    const titles = sheet.getRange(first, header.cols.title + 1, last - first + 1, 1).getDisplayValues();
+    const cols = Object.keys(header.cols).map((f) => header.cols[f]);
+    titles.forEach(([title], i) => {
+      if (!String(title).trim() || i === 0) return;
+      ensureDropdowns(sheet, header, first + i, cols);
+      fixed++;
+    });
+  });
+  resetCache();
+  Logger.log('Перевірено задач: ' + fixed);
 }
 
 /** Записує клітинки; якщо дата з часом, а формат клітинки час не показує — додає час до формату. */

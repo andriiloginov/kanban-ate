@@ -33,6 +33,8 @@ await test('unauthorized без ключа (GET і POST)', async () => {
   assert.deepEqual(await get({ action: 'tabs' }), { error: 'unauthorized' });
   assert.deepEqual(await get({ action: 'tabs', key: 'wrong' }), { error: 'unauthorized' });
   assert.deepEqual(await post({ action: 'create', tab: 'Sep 26', item: { title: 'x' } }), { error: 'unauthorized' });
+  assert.deepEqual(await get({ action: 'tabs', key: '' }), { error: 'unauthorized' });
+  assert.ok((await get({ action: 'tabs', key: 'user-key' })).tabs, 'USER_KEY теж пускає');
 });
 
 await test('«Зведена таблиця» не видно через API', async () => {
@@ -99,20 +101,24 @@ await test('перемикання місяця + невідомий стату�
   await card('Банер для сайту').waitFor();
 });
 
-await test('перестановка в межах колонки переміщує рядок у таблиці', async () => {
+await test('нові зверху за замовчуванням; перестановка переміщує рядок у таблиці; перемикач порядку', async () => {
   const titles = () => tab('Sep 26').rows.map((r) => r[0]).filter((t) => ['Іконки для застосунку', 'Логотип', 'Пости для соцмереж'].includes(t));
+  const shown = () => column('Not started').locator('article p.font-medium').allTextContents();
   assert.deepEqual(titles(), ['Іконки для застосунку', 'Логотип', 'Пости для соцмереж']);
-  const from = await card('Пости для соцмереж').boundingBox(), to = await card('Іконки для застосунку').boundingBox();
+  assert.deepEqual(await shown(), ['Пости для соцмереж', 'Логотип', 'Іконки для застосунку'], 'останні рядки — зверху');
+  const from = await card('Іконки для застосунку').boundingBox(), to = await card('Пости для соцмереж').boundingBox();
   await page.mouse.move(from.x + 20, from.y + 15);
   await page.mouse.down();
   await page.mouse.move(from.x + 30, from.y + 5, { steps: 5 });
   await page.mouse.move(to.x + 20, to.y + 8, { steps: 15 });
   await page.mouse.up();
-  await until(() => titles()[0] === 'Пости для соцмереж');
-  assert.deepEqual(titles(), ['Пости для соцмереж', 'Іконки для застосунку', 'Логотип']);
+  await until(() => titles()[2] === 'Іконки для застосунку');
+  assert.deepEqual(titles(), ['Логотип', 'Пости для соцмереж', 'Іконки для застосунку'], 'кинута нагору = стала найновішою');
   await page.waitForFunction(() => !document.querySelector('#refreshBtn').disabled);
-  const order = await column('Not started').locator('article p.font-medium').allTextContents();
-  assert.deepEqual(order, ['Пости для соцмереж', 'Іконки для застосунку', 'Логотип']);
+  assert.deepEqual(await shown(), ['Іконки для застосунку', 'Пости для соцмереж', 'Логотип']);
+  await page.click('#orderBtn');
+  assert.deepEqual(await shown(), ['Логотип', 'Пости для соцмереж', 'Іконки для застосунку'], 'старі зверху');
+  await page.click('#orderBtn');
   const stale = await post({ action: 'move', key: KEY, tab: 'Sep 26', row: 4, expectedTitle: 'Іконки для застосунку', before: 5, beforeTitle: 'Логотип' });
   assert.deepEqual(stale, { error: 'conflict' }, 'рядки вже зсунулись — старі номери дають conflict');
   // вниз: «після» останньої картки (Aug 26 UI зараз не відкрита)
@@ -171,6 +177,8 @@ await test('додавання задачі (з №, не затираючи п�
   await until(() => rows.some((r) => r[1] === 'Нова задача'));
   assert.deepEqual(rows[4].slice(0, 4), [3, 'Нова задача', '', 'Not started']);
   assert.equal(rows[5][2], 3, 'рядок підсумку не зачеплено');
+  const copied = fixture.copies.filter((c) => c.to === 5).map((c) => `${c.from}:${c.type}`);
+  assert.deepEqual(copied, ['4:PASTE_FORMAT', '4:PASTE_DATA_VALIDATION'], 'оформлення й пігулки статусу скопійовано з задачі вище');
   await column('Not started').locator('article[data-row="5"]', { hasText: 'Нова задача' }).waitFor();
 });
 
